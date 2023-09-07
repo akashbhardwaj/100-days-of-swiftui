@@ -11,9 +11,9 @@ struct ContentView: View {
 
 
     var body: some View {
-//       Animations()
+       Animations()
 //        BindingAnimations()
-        ExplicitAnimations()
+//        ExplicitAnimations()
     }
 }
 
