@@ -14,19 +14,31 @@ struct ProspectsView: View {
         case none, contacted, uncontacted
     }
 
+    enum SortType {
+        case alphabetically, chronologically
+    }
+
     let filter: FilterType
+    @State private var sortType = SortType.chronologically
     @EnvironmentObject var prospects: Prospects
     @State private var isShowingScanner = false
+    @State private var isShowingConfirmation = false
 
     var body: some View {
         NavigationView {
             List {
-                ForEach(filteredProspects) { prospect in
+                ForEach(sortedProspects) { prospect in
                     VStack(alignment: .leading) {
-                        Text(prospect.name)
-                            .font(.headline)
-                        Text(prospect.emailAddress)
-                            .foregroundStyle(.secondary)
+                        HStack {
+                            VStack(alignment: .leading) {
+                                Text(prospect.name)
+                                    .font(.headline)
+                                Text(prospect.emailAddress)
+                                    .foregroundStyle(.secondary)
+                            }
+                            Spacer()
+                            isContactedIndicator(for: prospect)
+                        }
                     }
                     .swipeActions {
                         if prospect.isContacted {
@@ -61,10 +73,33 @@ struct ProspectsView: View {
                 } label: {
                     Label("Scan", systemImage: "qrcode.viewfinder")
                 }
+
+                Button {
+                    isShowingConfirmation = true
+                } label: {
+                    Label("Sort", systemImage: sortType == .alphabetically
+                          ? "square.stack.3d.up.badge.automatic.fill"
+                          : "square.stack.3d.up.badge.automatic")
+                }
             }
             .sheet(isPresented: $isShowingScanner) {
-                CodeScannerView(codeTypes: [.qr], simulatedData: "Akash Bhardwaj\nbhardwaj@swift.com"){ handleScan(result: $0) }
+                CodeScannerView(codeTypes: [.qr], simulatedData: "Akash Bhardwaj\nakash@swift.com"){ handleScan(result: $0) }
             }
+            .confirmationDialog("Sort", isPresented: $isShowingConfirmation) {
+                Button("Alphabetically") {
+                    sortType = .alphabetically
+                }
+                Button("Most Recent") {
+                    sortType = .chronologically
+                }
+            }
+        }
+    }
+
+    @ViewBuilder
+    func isContactedIndicator(for prospect: Prospect) -> (some View)? {
+        if filter == .none && prospect.isContacted {
+            Image(systemName: "person.crop.circle.badge.checkmark")
         }
     }
 
@@ -76,6 +111,15 @@ struct ProspectsView: View {
             return "Contacted People"
         case .uncontacted:
             return "Uncontacted People"
+        }
+    }
+
+    var sortedProspects: [Prospect] {
+        switch sortType {
+        case .alphabetically:
+            filteredProspects.sorted(by: { $0.name < $1.name })
+        case .chronologically:
+            filteredProspects.sorted(by: { $0.dateCreated > $1.dateCreated })
         }
     }
 
