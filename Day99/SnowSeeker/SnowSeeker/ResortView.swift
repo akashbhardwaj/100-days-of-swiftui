@@ -18,6 +18,7 @@ struct ResortView: View {
 
     var body: some View {
         ScrollView {
+            TextEditor(text: .constant("Placeholder"))
             VStack(alignment: .leading, spacing: 0) {
                 ZStack(alignment: .bottomTrailing) {
                     Image(decorative: resort.id)
